@@ -1,34 +1,39 @@
+import datetime as dt
 import requests
-import sys
 
-BASE_URL = "http://api.openweathermap.org/data/2.5/weather?"
-CITY = "Guntur"
+BASE_URL="http://api.openweathermap.org/data/2.5/weather?"
+API_KEY="442cac6e57e6361e9850e284a1a5eeea"
+CITY=input("Enter the city name:")
 
-# Read API key from the file
-try:
-    with open('api_key.txt', 'r') as file:
-        API_KEY = file.read().strip()
-except FileNotFoundError:
-    print("Error: 'api_key' file not found. Please create the file and add your API key.")
-    sys.exit()  # Use sys.exit() to exit the script
 
-# Construct the complete URL
-url = f"{BASE_URL}appid={API_KEY}&q={CITY}&units=metric"
+def K_to_C_F(kelvin):
+    celsius=kelvin-273.15
+    fahrenheit=celsius*(9/5)+32
+    return celsius,fahrenheit
 
-# Make the request and get the response
-response = requests.get(url)
-weather_data = response.json()
 
-# Check if the response contains weather data
-if response.status_code == 200:
-    main_data = weather_data.get('main', {})
-    temperature = main_data.get('temp')
-    humidity = main_data.get('humidity')
-    condition_data = weather_data.get('weather', [{}])
-    condition = condition_data[0].get('description', '')
+url=BASE_URL+"appid="+API_KEY+"&q="+CITY
 
-    print(f"Temperature: {temperature:.2f}°C")
-    print(f"Humidity: {humidity}%")
-    print(f"Condition: {condition.capitalize()}")
-else:
-    print(f"Error: {weather_data.get('message', 'Unable to fetch weather data.')}")
+response=requests.get(url).json()
+
+temp_kelvin=response['main']['temp']
+temp_celsius,temp_fahrenheit=K_to_C_F(temp_kelvin)
+
+feels_like_kelvin=response['main']['feels_like']
+feels_like_celsius,feels_like_fahrenheit=K_to_C_F(feels_like_kelvin)
+
+wind_speed=response['wind']['speed']
+humidity=response['main']['humidity']
+description=response['weather'][0]['description']
+
+sunrise_time=dt.datetime.utcfromtimestamp(response['sys']['sunrise']+response['timezone'])
+sunset_time=dt.datetime.utcfromtimestamp(response['sys']['sunset']+response['timezone'])
+
+print("In"+" "+CITY)
+print(f"Temperature : {temp_celsius:.2f}C or {temp_fahrenheit:.2f}F")
+print(f"Feels like: {feels_like_celsius:.2f}C or {feels_like_fahrenheit:.2f}F")
+print(f"Humidity : {humidity}%")
+print(f"Wind Spped : {wind_speed}m/s")
+print(f"General Weather : {description}")
+print(f"Sunrise : {sunrise_time}")
+print(f"Sunset : {sunset_time}")
